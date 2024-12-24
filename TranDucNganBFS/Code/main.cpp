@@ -26,7 +26,7 @@ void waitForKeypress();
 bool isResetMode = false;//Bien danh dau reset
 bool isGraphLoaded = false;//Bien xac dinh xem do thi da duoc load hay chua 
 bool isBFSExecuted = false;// Bien check bfs da chay lan nao chua
-bool isAdjSymmetry = true;//Bien kiem tra ma tran doi xung
+bool isAdjSymmetry = false;//Bien kiem tra ma tran doi xung
 
 int visited[MAX_SIZE];
 int parent[MAX_SIZE];
@@ -59,6 +59,7 @@ void openAndReadFile(const char* filePath) {
 	        }
 	    }
 	    //kiem tra doi xung
+	    isAdjSymmetry = true;
     	for (int i = 0; i < numV; i++) {
 	        for (int j = 0; j < numV; j++) {
 	            if (adjMatrix[i][j] != adjMatrix[j][i]) {
@@ -255,7 +256,7 @@ void handleClick(int x, int y) {
         outtextxy(80, 270, "Thank you for reviewing the project!");
     }
 	
-	//Open file
+	//load file
 	if(x >= 567 && x <= 700 && y >= 70 && y <= 110){
 		OPENFILENAME ofn;
 		TCHAR szFile[MAX_PATH];
@@ -274,6 +275,7 @@ void handleClick(int x, int y) {
 		ofn.lpstrInitialDir = szFolder; //Su dung thu muc hien tai lam thu muc mac dinh
     	if (GetOpenFileName(&ofn)) {
         	const char* filePath = ofn.lpstrFile;
+        	isAdjSymmetry = true;
         	openAndReadFile(filePath);
         	ZeroMemory(szFile, sizeof(szFile));
 		}
