@@ -5,6 +5,7 @@
 
 #define MAX_SIZE 100
 #define M_PI 3.14159265358979323846
+#define RADIUS 20
 
 //Khai bao ham
 void drawframe();
@@ -25,6 +26,7 @@ void waitForKeypress();
 bool isResetMode = false;//Bien danh dau reset
 bool isGraphLoaded = false;//Bien xac dinh xem do thi da duoc load hay chua 
 bool isBFSExecuted = false;// Bien check bfs da chay lan nao chua
+bool isAdjSymmetry = true;//Bien kiem tra ma tran doi xung
 
 int visited[MAX_SIZE];
 int parent[MAX_SIZE];
@@ -50,18 +52,39 @@ void openAndReadFile(const char* filePath) {
         printf("File not found!");
     }
 	else {
-        fscanf(fp, "%d", &numV);
-        for (int i = 0; i < numV; i++) {
-            fscanf(fp, "%d %d %d", &vertices[i].x, &vertices[i].y, &vertices[i].label);
-        }
-    }
-    for (int i = 0; i < numV; i++) {
-        for (int j = 0; j < numV; j++) {
-            fscanf(fp, "%d", &adjMatrix[i][j]);
-        }
+		fscanf(fp, "%d", &numV);
+	    for (int i = 0; i < numV; i++) {
+	        for (int j = 0; j < numV; j++) {
+	            fscanf(fp, "%d", &adjMatrix[i][j]);
+	        }
+	    }
+	    //kiem tra doi xung
+    	for (int i = 0; i < numV; i++) {
+	        for (int j = 0; j < numV; j++) {
+	            if (adjMatrix[i][j] != adjMatrix[j][i]) {
+                	isAdjSymmetry = false;
+                	break;
+            	}
+	        }
+	    }
     }
     isGraphLoaded = true; //Dat co gia tri la true khi do thi duoc load
     fclose(fp);
+}
+
+//Ham ve duong thang
+void drawLine(int x1, int y1, int x2, int y2) {
+    // Ve duong thang
+    line(x1, y1, x2, y2);
+}
+
+// Ham ve hinh tron
+void drawCircle(int x, int y, int label) {
+    setcolor(WHITE);
+    circle(x, y, RADIUS);
+    char buffer[10];
+    sprintf(buffer, "%d", label);
+    outtextxy(x - 10, y - 10, buffer);
 }
 
 // Ham ve mui ten
@@ -85,68 +108,129 @@ void drawArrow(int x1, int y1, int x2, int y2) {
     line(x2, y2, x4, y4);
 }
 
-// Ham ve do thi
-void drawgraph() {
-    const int RADIUS = 20; // Ban kinh cua vong tron cho cac dinh
-    settextstyle(1, 0, 3);
-
-    // Ve các dinh
-    for (int i = 0; i < numV; i++) {
-        circle(vertices[i].x, vertices[i].y, RADIUS);
-        outtextxy(vertices[i].x - 10, vertices[i].y - 10, itoa(vertices[i].label, buffer, 10));
-    }
-
-    // Ve cac canh
+//ham ve canh
+void drawEdges() {
     for (int i = 0; i < numV; i++) {
         for (int j = 0; j < numV; j++) {
-            if (adjMatrix[i][j] == 1 && adjMatrix[j][i] == 0) {  // Ve mui ten tu i den j (mot chieu)
-                // Tinh goc giua 2 dinh
-                double angle = atan2(vertices[j].y - vertices[i].y, vertices[j].x - vertices[i].x);
-
-                // Tính toa do diem tiep tuyen trên chu vi cua các dinh
-                int x1 = vertices[i].x + RADIUS * cos(angle);
-                int y1 = vertices[i].y + RADIUS * sin(angle);
-                int x2 = vertices[j].x - RADIUS * cos(angle);
-                int y2 = vertices[j].y - RADIUS * sin(angle);
-
-                // Ve mui tên mot chieu tu i den j
-                drawArrow(x1, y1, x2, y2);
-            }
-
-            if (adjMatrix[j][i] == 1 && adjMatrix[i][j] == 0) {  // Ve mui tên tu j den i (mot chieu)
-                // Tính góc giua 2 dinh
-                double angle = atan2(vertices[i].y - vertices[j].y, vertices[i].x - vertices[j].x);
-
-                // Tính toa do diem tiep tuyen trên chu vi cua các dinh
-                int x1 = vertices[j].x + RADIUS * cos(angle);
-                int y1 = vertices[j].y + RADIUS * sin(angle);
-                int x2 = vertices[i].x - RADIUS * cos(angle);
-                int y2 = vertices[i].y - RADIUS * sin(angle);
-
-                // Ve mui tên mot chieu tu j den i
-                drawArrow(x1, y1, x2, y2);
-            }
-
-            // Truong hop có canh hai chieu, ve ca hai mui tên
-            if (adjMatrix[i][j] == 1 && adjMatrix[j][i] == 1) {
-                // Ve mui tên tu i den j
-                double angle1 = atan2(vertices[j].y - vertices[i].y, vertices[j].x - vertices[i].x);
-                int x1 = vertices[i].x + RADIUS * cos(angle1);
-                int y1 = vertices[i].y + RADIUS * sin(angle1);
-                int x2 = vertices[j].x - RADIUS * cos(angle1);
-                int y2 = vertices[j].y - RADIUS * sin(angle1);
-                drawArrow(x1, y1, x2, y2);
-
-                // Ve mui ten tu j den i
-                double angle2 = atan2(vertices[i].y - vertices[j].y, vertices[i].x - vertices[j].x);
-                x1 = vertices[j].x + RADIUS * cos(angle2);
-                y1 = vertices[j].y + RADIUS * sin(angle2);
-                x2 = vertices[i].x - RADIUS * cos(angle2);
-                y2 = vertices[i].y - RADIUS * sin(angle2);
-                drawArrow(x1, y1, x2, y2);
-            }
+        	//vo huong (ma tran doi xung)
+        	if (isAdjSymmetry) {
+                if (adjMatrix[i][j] == 1 && i < j) {  
+                	// Tinh goc giua 2 dinh
+	                double angle = atan2(vertices[j].y - vertices[i].y, vertices[j].x - vertices[i].x);
+	
+	                // Tính toa do diem tiep tuyen trên chu vi cua các dinh
+	                int x1 = vertices[i].x + RADIUS * cos(angle);
+	                int y1 = vertices[i].y + RADIUS * sin(angle);
+	                int x2 = vertices[j].x - RADIUS * cos(angle);
+	                int y2 = vertices[j].y - RADIUS * sin(angle);
+                    drawLine(x1, y1, x2, y2);
+                }
+            } 
+            
+            // co huong
+            else{
+            	if (adjMatrix[i][j] == 1 && adjMatrix[j][i] == 0) {  // Ve mui ten tu i den j (mot chieu)
+	                // Tinh goc giua 2 dinh
+	                double angle = atan2(vertices[j].y - vertices[i].y, vertices[j].x - vertices[i].x);
+	
+	                // Tính toa do diem tiep tuyen trên chu vi cua các dinh
+	                int x1 = vertices[i].x + RADIUS * cos(angle);
+	                int y1 = vertices[i].y + RADIUS * sin(angle);
+	                int x2 = vertices[j].x - RADIUS * cos(angle);
+	                int y2 = vertices[j].y - RADIUS * sin(angle);
+	
+	                // Ve mui tên mot chieu tu i den j
+	                drawArrow(x1, y1, x2, y2);
+	            }
+	
+	            if (adjMatrix[j][i] == 1 && adjMatrix[i][j] == 0) {  // Ve mui tên tu j den i (mot chieu)
+	                // Tính góc giua 2 dinh
+	                double angle = atan2(vertices[i].y - vertices[j].y, vertices[i].x - vertices[j].x);
+	
+	                // Tính toa do diem tiep tuyen trên chu vi cua các dinh
+	                int x1 = vertices[j].x + RADIUS * cos(angle);
+	                int y1 = vertices[j].y + RADIUS * sin(angle);
+	                int x2 = vertices[i].x - RADIUS * cos(angle);
+	                int y2 = vertices[i].y - RADIUS * sin(angle);
+	
+	                // Ve mui tên mot chieu tu j den i
+	                drawArrow(x1, y1, x2, y2);
+	            }
+	
+	            // Truong hop có canh hai chieu, ve ca hai mui tên
+	            if (adjMatrix[i][j] == 1 && adjMatrix[j][i] == 1) {
+	                // Ve mui tên tu i den j
+	                double angle1 = atan2(vertices[j].y - vertices[i].y, vertices[j].x - vertices[i].x);
+	                int x1 = vertices[i].x + RADIUS * cos(angle1);
+	                int y1 = vertices[i].y + RADIUS * sin(angle1);
+	                int x2 = vertices[j].x - RADIUS * cos(angle1);
+	                int y2 = vertices[j].y - RADIUS * sin(angle1);
+	                drawArrow(x1, y1, x2, y2);
+	
+	                // Ve mui ten tu j den i
+	                double angle2 = atan2(vertices[i].y - vertices[j].y, vertices[i].x - vertices[j].x);
+	                x1 = vertices[j].x + RADIUS * cos(angle2);
+	                y1 = vertices[j].y + RADIUS * sin(angle2);
+	                x2 = vertices[i].x - RADIUS * cos(angle2);
+	                y2 = vertices[i].y - RADIUS * sin(angle2);
+	                drawArrow(x1, y1, x2, y2);
+	            }
+			}
         }
     }
+}
+
+void redrawgraph() {
+    for (int i = 0; i < numV; i++) {
+        drawCircle(vertices[i].x, vertices[i].y, vertices[i].label);
+    }
+    drawEdges();
+}
+
+void drawgraph() {
+    int vertexCount = 0;
+    
+    settextstyle(10, 0, 1);
+    setcolor(WHITE);
+    outtextxy(20, 390, "CLICK LEFT MOUSE BUTTON TO ADD A NODE");
+
+    // Mang luu tru cac dinh (chi ve cac dinh truoc)
+    while (vertexCount < numV && !kbhit()) {
+        if (ismouseclick(WM_LBUTTONDOWN)) {
+            int x = mousex();
+            int y = mousey();
+
+            if (x >= 10 + RADIUS && x <= 550 - RADIUS && y >= 10 + RADIUS && y <= 370 - RADIUS) {
+                bool canPlace = true;
+
+                // Kiem tra khoang cach voi cac dinh da co
+                for (int i = 0; i < vertexCount; i++) {
+                    double distance = sqrt(pow(vertices[i].x - x, 2) + pow(vertices[i].y - y, 2));
+                    if (distance < 3 * RADIUS) {  // Khoang cach toi thieu de them dinh moi
+                        canPlace = false;
+                        break;
+                    }
+                }
+
+                if (canPlace) {
+                    // Gan vi tri va nhan cho dinh moi
+                    vertices[vertexCount].x = x;
+                    vertices[vertexCount].y = y;
+                    vertices[vertexCount].label = vertexCount;  // Nhan dinh bat dau tu 0
+
+                    drawCircle(x, y, vertexCount);  // Ve dinh
+                    vertexCount++;  // Tang so dinh
+                }
+            }
+            clearmouseclick(WM_LBUTTONDOWN);  // Xoa su kien chuot
+        }
+        delay(10);  // Tam dung ngan giua cac lan lap
+    }
+    // Sau khi tat ca cac dinh da duoc ve, ve cac canh
+    setcolor(BLACK);
+    outtextxy(20, 390, "CLICK LEFT MOUSE BUTTON TO ADD A NODE");
+    setcolor(WHITE);
+    drawEdges();  // Ve cac canh sau khi ve tat ca cac dinh
 }
 
 //Ham xu ly thao tac
@@ -198,41 +282,42 @@ void handleClick(int x, int y) {
         drawgraph();
 	}
 
-	//Start
-    if (x >= 567 && x <= 700 && y >= 130 && y <= 170) {	
-    	//Neu do thi da duoc load hoac dang o che do reset
-    	if(isGraphLoaded || isResetMode ){
-        	//Chay BFS neu chua duoc chay
-        	if (!isBFSExecuted) {
-            	BFS_display(); // Chay bfs
-            	isBFSExecuted = true; // Da chay bfs
-        	} else {
-            	cleanGraph();
-            	drawframe();
-            	drawgraph();
-            	BFS_display();
-        	}
-        	isGraphLoaded=true;
-    	}else{
-    		setcolor(WHITE); 
-    		cleanGraph();  //Xoa do thi
-			drawframe();   //Ve khung
-    		outtextxy(195, 120, "NO GRAPH TO START");  //Khong co do thi de bat dau
-    		outtextxy(60, 170, "CLICK THE 'Load file' BUTTON TO ADD GRAPH");  //Click vao nut 'Load file' de them do thi
-		}
+		// Start
+	if (x >= 567 && x <= 700 && y >= 130 && y <= 170) {	
+	    // Neu do thi da duoc tai
+	    if (isGraphLoaded) {
+	        // Neu BFS chua duoc chay, thi chay BFS
+	        if (!isBFSExecuted) {
+	            BFS_display(); // Chay BFS
+	            isBFSExecuted = true; // Danh dau la BFS da chay
+	        } else {
+	            clearGraph();      // Xoa do thi hien tai
+	            drawframe();       // Ve lai khung
+	            redrawgraph();     // Ve lai do thi
+	            BFS_display();     // Chay lai BFS
+	        }
+	    } else {
+	        setcolor(WHITE); 
+	        cleanGraph();          // Xoa do thi
+	        drawframe();           // Ve lai khung
+	        outtextxy(195, 120, "NO GRAPH TO START");  // Khong co do thi de bat dau
+	        outtextxy(60, 170, "CLICK THE 'Load file' BUTTON TO ADD GRAPH");  // Nhan nut 'Load file' de tai do thi
+	    }
 	}
 	
-    //Reset
-    if (x >= 567 && x <= 700 && y >= 190 && y <= 230) {
-    	//Neu do thi da duoc load
-    	if (isGraphLoaded) {
-        	isResetMode = true;
-        	isBFSExecuted = false;
-        	cleanGraph();  //Xoa do thi
-        	drawframe();   //Ve khung
-        	drawgraph();   //Ve do thi moi
-    	}
-    	isGraphLoaded = false;
+	// Reset
+	if (x >= 567 && x <= 700 && y >= 190 && y <= 230) {
+	    if (isGraphLoaded) {
+	        isBFSExecuted = false; // Dat lai trang thai BFS
+	        cleanGraph();          // Xoa do thi hien tai
+	        drawframe();           // Ve lai khung
+	        drawgraph();         // Ve lai do thi
+	        isGraphLoaded = true;
+	    } else {
+	        setcolor(WHITE);
+	        settextstyle(10, 0, 1);
+	        outtextxy(195, 120, "NO GRAPH TO RESET");  // Khong co do thi de dat lai
+	    }
 	}
     
     //Delete
@@ -378,7 +463,8 @@ void bfs(int start, int end, int n) {
 
                 // Ve duong noi tu diem tiep tuyen và mui tên màu do
                 setcolor(RED);
-                drawArrow(x1, y1, x2, y2);
+                if(!isAdjSymmetry) drawArrow(x1, y1, x2, y2);
+                else drawLine(x1, y1, x2, y2);
 
                 delay(400);
             }
@@ -406,7 +492,8 @@ void bfs(int start, int end, int n) {
             int y2 = vertices[path[i - 1]].y + 20 * sin(angle);
 
             // Ve lai duong mui ten
-            drawArrow(x1, y1, x2, y2);
+            if(!isAdjSymmetry) drawArrow(x1, y1, x2, y2);
+            else drawLine(x1, y1, x2, y2);
             delay(200);
         }
 
